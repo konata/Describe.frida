@@ -6,7 +6,7 @@ setImmediate(() =>
     ContextWrapper.attachBaseContext.implementation = function (
       ...args: any[]
     ) {
-      console.log(JSON.stringify(prettyprint(args)))
+      console.log(JSON.stringify(prettyprint(args, 3, 5)))
       return this.attachBaseContext(...args)
     }
   })

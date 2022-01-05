@@ -2,7 +2,11 @@
 
 the missing `Dump` library for frida
 
-## how to use
+## why?
+
+to get more meaningful information about an object rather than `[Object object]`
+
+## how ?
 
 ```typescript
 import { prettyprint } from './Describe'

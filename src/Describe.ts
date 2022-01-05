@@ -1,6 +1,6 @@
 const JCollection = Java.use('java.util.Collection').class
 const JMap = Java.use('java.util.Map').class
-const Entry = Java.use('java.util.Map$Entry')
+const $Entry = Java.use('java.util.Map$Entry')
 
 type JsonValue =
   | string
@@ -14,10 +14,10 @@ export function prettyprint(
   hierarchyLimit: number = 2
 ): JsonValue {
   const type = typeof wrapped
-  const runtimeType = wrapped && wrapped.getClass && wrapped.getClass()
-  const runtimeTypeRepr = runtimeType && runtimeType.toString()
-  const declareType = wrapped && wrapped.class
-  const declareTypeRepr = declareType && declareType.toString()
+  const runtimeType = wrapped?.getClass?.() // wrapped && wrapped.getClass && wrapped.getClass()
+  const runtimeTypeRepr = runtimeType?.toString?.()
+  const declareType = wrapped?.class
+  const declareTypeRepr = declareType?.toString?.()
   const describable =
     'String Integer Long Double Float Byte Short Character Boolean'
       .split(/\s+/g)
@@ -37,7 +37,7 @@ export function prettyprint(
     return wrapped.toString()
   } else if (
     (runtimeType === undefined && declareTypeRepr === undefined) ||
-    (runtimeTypeRepr?.startsWith('class [') ?? false)
+    runtimeTypeRepr?.startsWith('class [')
   ) {
     // 2. js aware arrays & java aware array
     if (depth <= 0) {
@@ -55,8 +55,9 @@ export function prettyprint(
     if (depth <= 0) {
       return `TooDeep@Collection@${wrapped}`
     } else {
-      const ary = [...wrapped.toArray()] // call Collections.toArray() and ensure it has map method
-      return ary.map((it) => prettyprint(it, depth - 1, hierarchyLimit))
+      return [...wrapped.toArray()].map((it) =>
+        prettyprint(it, depth - 1, hierarchyLimit)
+      )
     }
   } else if (
     (declareType && JMap.isAssignableFrom(declareType)) ||
@@ -66,10 +67,9 @@ export function prettyprint(
     if (depth <= 0) {
       return `TooDeep@Map@${wrapped}`
     } else {
-      const entries = [...wrapped.entrySet().toArray()]
-      return entries.reduce((acc, ele) => {
-        const key = Entry.getKey.call(ele).toString()
-        const value = Entry.getValue.call(ele)
+      return [...wrapped.entrySet().toArray()].reduce((acc, ele) => {
+        const key = $Entry.getKey.call(ele).toString()
+        const value = $Entry.getValue.call(ele)
         acc[key] = prettyprint(value, depth - 1, hierarchyLimit)
         return acc
       }, new Map<string, JsonValue>())
@@ -82,16 +82,17 @@ export function prettyprint(
         ([tuples, clazz], level) => {
           const acc = [...(clazz?.getDeclaredFields?.() ?? [])]
             .map((it) => it.getName() as string)
-            .map((it) => {
-              return [
-                it,
-                prettyprint(
-                  wrapped[it]?.value,
-                  depth - 1,
-                  hierarchyLimit - level - 1
-                ),
-              ] as [string, JsonValue]
-            })
+            .map(
+              (it) =>
+                [
+                  it,
+                  prettyprint(
+                    wrapped[it]?.value,
+                    depth - 1,
+                    hierarchyLimit - level - 1
+                  ),
+                ] as [string, JsonValue]
+            )
           const supers = clazz?.getSuperclass()
           return [[...tuples, ...acc], supers]
         },

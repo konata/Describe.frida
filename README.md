@@ -4,7 +4,7 @@ the missing `Dump` library for frida
 
 ## why?
 
-to get more meaningful information about an object rather than `[Object object]`
+to get more meaningful information about an object rather than `[Object object]` or `android.app.ContextImpl@f363a64`
 
 ## how ?
 

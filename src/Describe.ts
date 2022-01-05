@@ -25,7 +25,7 @@ export function prettyprint(
   const primitives = `boolean string number`
 
   if (hierarchyLimit <= 0) {
-    return `TooDeep@Hierarchy@${wrapped}`
+    return `${wrapped}`
   } else if (wrapped === null || wrapped === undefined) {
     return `null`
   } else if (
@@ -41,7 +41,7 @@ export function prettyprint(
   ) {
     // 2. js aware arrays & java aware array
     if (depth <= 0) {
-      return `TooDeep@Array@${wrapped}`
+      return `${wrapped}`
     } else {
       return [...wrapped].map((it) =>
         prettyprint(it, depth - 1, hierarchyLimit)
@@ -53,7 +53,7 @@ export function prettyprint(
   ) {
     // 3. Collection [List, Set, Etc]
     if (depth <= 0) {
-      return `TooDeep@Collection@${wrapped}`
+      return `${wrapped}`
     } else {
       return [...wrapped.toArray()].map((it) =>
         prettyprint(it, depth - 1, hierarchyLimit)
@@ -65,7 +65,7 @@ export function prettyprint(
   ) {
     // 4. Map
     if (depth <= 0) {
-      return `TooDeep@Map@${wrapped}`
+      return `${wrapped}`
     } else {
       return [...wrapped.entrySet().toArray()].reduce((acc, ele) => {
         const key = $Entry.getKey.call(ele).toString()

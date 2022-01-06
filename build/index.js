@@ -431,7 +431,7 @@ setImmediate(function () {
                 }
                 console.log('\n');
                 console.error('activity=', this);
-                console.log('activity=', JSON.stringify((0, Describe_1.prettyprint)(this, 5, 2), null, 2));
+                console.log('activity=', JSON.stringify((0, Describe_1.prettyprint)(this, 5, 7), null, 2));
                 return overload.apply(this, args);
             };
         });

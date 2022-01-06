@@ -20,7 +20,7 @@ setImmediate(() =>
         console.error('activity=', this)
         console.log(
           'activity=',
-          JSON.stringify(prettyprint(this, 5, 2), null, 2)
+          JSON.stringify(prettyprint(this, 5, 7), null, 2)
         )
         return overload.apply(this, args)
       }

@@ -5,6 +5,10 @@
 while hacking with frida, as is often the case that we want to introspect a hook params or return value,
 `Describe.frida` empowers you to get more meaningful information about an object rather than `[Object object]` or `android.app.ContextImpl@f363a64`
 
+![Comparation](./art/sample.png)
+
+
+
 ## how?
 
 ```typescript

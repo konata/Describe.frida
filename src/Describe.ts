@@ -1,6 +1,8 @@
 const JCollection = Java.use('java.util.Collection').class
 const JMap = Java.use('java.util.Map').class
 const $Entry = Java.use('java.util.Map$Entry')
+const JObject = Java.use('java.lang.Object')
+const Modifier = Java.use('java.lang.reflect.Modifier')
 
 type JsonValue =
   | string
@@ -8,10 +10,22 @@ type JsonValue =
   | Map<string, JsonValue>
   | { [_: string]: JsonValue }
 
-export function prettyprint(
+export function describe(
   wrapped: any,
   depth: number = 5,
-  hierarchyLimit: number = 2
+  hierarchyLimit: number = 2,
+  ignoreStatics = true
+) {
+  return JSON.stringify(
+    prettyprint(wrapped, depth, hierarchyLimit, ignoreStatics)
+  )
+}
+
+export function prettyprint(
+  wrapped: any,
+  depth: number,
+  hierarchyLimit: number,
+  ignoreStatics: boolean
 ): JsonValue {
   const type = typeof wrapped
   const runtimeType = wrapped?.getClass?.() // wrapped && wrapped.getClass && wrapped.getClass()
@@ -23,7 +37,6 @@ export function prettyprint(
       .split(/\s+/g)
       .map((it) => `class java.lang.${it}`)
   const primitives = `boolean string number`
-
   if (hierarchyLimit <= 0) {
     return `${wrapped}`
   } else if (wrapped === null || wrapped === undefined) {
@@ -44,7 +57,7 @@ export function prettyprint(
       return `${wrapped}`
     } else {
       return [...wrapped].map((it) =>
-        prettyprint(it, depth - 1, hierarchyLimit)
+        prettyprint(it, depth - 1, hierarchyLimit, ignoreStatics)
       )
     }
   } else if (
@@ -56,7 +69,7 @@ export function prettyprint(
       return `${wrapped}`
     } else {
       return [...wrapped.toArray()].map((it) =>
-        prettyprint(it, depth - 1, hierarchyLimit)
+        prettyprint(it, depth - 1, hierarchyLimit, ignoreStatics)
       )
     }
   } else if (
@@ -70,17 +83,28 @@ export function prettyprint(
       return [...wrapped.entrySet().toArray()].reduce((acc, ele) => {
         const key = $Entry.getKey.call(ele).toString()
         const value = $Entry.getValue.call(ele)
-        acc[key] = prettyprint(value, depth - 1, hierarchyLimit)
+        acc[key] = prettyprint(value, depth - 1, hierarchyLimit, ignoreStatics)
         return acc
       }, new Map<string, JsonValue>())
     }
   } else {
     // 5. Pojo, choose the most accuracy type
-    const clazz = runtimeType || declareType
+    const clazz =
+      runtimeType ||
+      (() => {
+        const casted = Java.cast(wrapped, JObject)
+        return casted?.getClass?.() ?? casted?.class
+      })() ||
+      declareType
+
+    // declareType
     if (clazz) {
       const [fields] = [...Array(hierarchyLimit).keys()].reduce(
         ([tuples, clazz], level) => {
           const acc = [...(clazz?.getDeclaredFields?.() ?? [])]
+            .filter(
+              (it) => !ignoreStatics || !Modifier.isStatic(it.getModifiers())
+            )
             .map((it) => it.getName() as string)
             .map(
               (it) =>
@@ -89,7 +113,8 @@ export function prettyprint(
                   prettyprint(
                     wrapped[it]?.value,
                     depth - 1,
-                    hierarchyLimit - level - 1
+                    hierarchyLimit - level - 1,
+                    ignoreStatics
                   ),
                 ] as [string, JsonValue]
             )
